@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <h2 class="hero-title">PDFファイルを簡単に操作</h2>
+    <p class="hero-subtitle">ブラウザ上でPDFの分割・結合が可能です</p>
+</div>
+
+<div class="tools-container">
+    <div class="tool-card" id="split-tool">
+        <div class="tool-header">
+            <i class="fas fa-cut"></i>
+            <h3>PDF分割</h3>
+        </div>
+        <p class="tool-description">PDFファイルをページごとに分割します</p>
+        
+        <div class="file-upload">
+            <input type="file" id="split-file" accept=".pdf" class="file-input">
+            <label for="split-file" class="file-label">
+                <i class="fas fa-upload"></i>
+                PDFファイルを選択
+            </label>
+        </div>
+        
+        <!-- ページ指定オプション追加 -->
+        <div id="split-options" class="split-options" style="display: none;">
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="split-type" value="all" checked>
+                    <span>全ページを個別に分割</span>
+                </label>
+            </div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="split-type" value="range">
+                    <span>ページ範囲を指定</span>
+                </label>
+                <div class="page-range" style="display: none;">
+                    <input type="number" id="start-page" placeholder="開始ページ" min="1" class="page-input">
+                    <span>〜</span>
+                    <input type="number" id="end-page" placeholder="終了ページ" min="1" class="page-input">
+                </div>
+            </div>
+            <div class="option-group">
+                <label class="radio-label">
+                    <input type="radio" name="split-type" value="specific">
+                    <span>特定のページを指定</span>
+                </label>
+                <div class="page-specific" style="display: none;">
+                    <input type="text" id="specific-pages" placeholder="例: 1,3,5-8" class="page-input-text">
+                    <small>カンマ区切りで指定。範囲は「-」で指定可能</small>
+                </div>
+            </div>
+        </div>
+        
+        <button id="split-btn" class="action-btn" disabled>
+            <i class="fas fa-cut"></i>
+            分割実行
+        </button>
+        
+        <div id="split-result" class="result-container"></div>
+    </div>
+
+    <div class="tool-card" id="merge-tool">
+        <div class="tool-header">
+            <i class="fas fa-compress"></i>
+            <h3>PDF結合</h3>
+        </div>
+        <p class="tool-description">複数のPDFファイルを1つに結合します</p>
+        
+        <div class="file-upload">
+            <input type="file" id="merge-files" accept=".pdf" multiple class="file-input">
+            <label for="merge-files" class="file-label">
+                <i class="fas fa-upload"></i>
+                PDFファイルを選択（複数可）
+            </label>
+        </div>
+        
+        <div id="file-list" class="file-list"></div>
+        
+        <button id="merge-btn" class="action-btn" disabled>
+            <i class="fas fa-compress"></i>
+            結合実行
+        </button>
+        
+        <div id="merge-result" class="result-container"></div>
+    </div>
+</div>
+<!-- 既存のツールセクション後に追加 -->
+<section class="help-section">
+  <div class="container">
+    <h2>📚 詳しい使い方・活用法</h2>
+    <div class="help-grid">
+      <a href="/pdf-split-free/" class="help-card">
+        <h3>📄 PDF分割の詳細ガイド</h3>
+        <p>ページ指定・範囲指定・全ページ分割の使い方を詳しく解説</p>
+        <span class="learn-more">詳しく見る →</span>
+      </a>
+      
+      <a href="/pdf-merge-online/" class="help-card">
+        <h3>🔗 PDF結合の活用法</h3>
+        <p>複数ファイルの結合方法と実用的な使用例をご紹介</p>
+        <span class="learn-more">詳しく見る →</span>
+      </a>
+      
+      <a href="/how-to-use/" class="help-card">
+        <h3>💡 完全使い方ガイド</h3>
+        <p>すべての機能の詳細な手順とトラブルシューティング</p>
+        <span class="learn-more">詳しく見る →</span>
+      </a>
+    </div>
+  </div>
+</section>
+<div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <p>処理中...</p>
+</div>
+{% endblock %}

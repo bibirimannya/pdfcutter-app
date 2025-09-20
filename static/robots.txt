@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /static/uploads/
+Disallow: /static/downloads/
+Sitemap: https://pdfcutter.jp/sitemap.xml

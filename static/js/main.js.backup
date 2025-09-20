@@ -1,0 +1,210 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const splitFileInput = document.getElementById('split-file');
+    const splitBtn = document.getElementById('split-btn');
+    const splitResult = document.getElementById('split-result');
+    
+    const mergeFilesInput = document.getElementById('merge-files');
+    const mergeBtn = document.getElementById('merge-btn');
+    const mergeResult = document.getElementById('merge-result');
+    const fileList = document.getElementById('file-list');
+    
+    const loading = document.getElementById('loading');
+
+    // ファイルサイズをフォーマット
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // エラーメッセージを表示
+    function showError(container, message) {
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                ${message}
+            </div>
+        `;
+    }
+
+    // 成功メッセージを表示
+    function showSuccess(container, message) {
+        container.innerHTML = `
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                ${message}
+            </div>
+        `;
+    }
+
+    // ドラッグ&ドロップ機能
+    function setupDragDrop(input, label) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            label.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            label.addEventListener(eventName, () => label.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            label.addEventListener(eventName, () => label.classList.remove('dragover'), false);
+        });
+
+        label.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (input.multiple) {
+                input.files = files;
+                updateFileList(files);
+                mergeBtn.disabled = files.length < 2;
+            } else {
+                if (files.length > 0) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(files[0]);
+                    input.files = dataTransfer.files;
+                    splitBtn.disabled = false;
+                }
+            }
+        }
+    }
+
+    // ファイルリストを更新
+    function updateFileList(files) {
+        fileList.innerHTML = '';
+        Array.from(files).forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div>
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+            `;
+            fileList.appendChild(fileItem);
+        });
+    }
+
+    // 分割機能
+    splitFileInput.addEventListener('change', function() {
+        splitBtn.disabled = this.files.length === 0;
+        splitResult.innerHTML = '';
+    });
+
+    splitBtn.addEventListener('click', async function() {
+        const file = splitFileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        loading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/split', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                splitResult.innerHTML = `
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        ${result.message}
+                    </div>
+                `;
+
+                result.files.forEach(file => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <div class="result-info">
+                            <div class="result-name">${file.filename}</div>
+                            <div class="result-page">ページ ${file.page}</div>
+                        </div>
+                        <a href="${file.download_url}" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </a>
+                    `;
+                    splitResult.appendChild(resultItem);
+                });
+            } else {
+                showError(splitResult, result.error);
+            }
+        } catch (error) {
+            showError(splitResult, 'ネットワークエラーが発生しました');
+        } finally {
+            loading.classList.add('hidden');
+        }
+    });
+
+    // 結合機能
+    mergeFilesInput.addEventListener('change', function() {
+        updateFileList(this.files);
+        mergeBtn.disabled = this.files.length < 2;
+        mergeResult.innerHTML = '';
+    });
+
+    mergeBtn.addEventListener('click', async function() {
+        const files = mergeFilesInput.files;
+        if (files.length < 2) return;
+
+        const formData = new FormData();
+        Array.from(files).forEach(file => {
+            formData.append('files[]', file);
+        });
+
+        loading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/merge', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                mergeResult.innerHTML = `
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        ${result.message}
+                    </div>
+                    <div class="result-item">
+                        <div class="result-info">
+                            <div class="result-name">${result.filename}</div>
+                            <div class="result-page">結合完了</div>
+                        </div>
+                        <a href="${result.download_url}" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </a>
+                    </div>
+                `;
+            } else {
+                showError(mergeResult, result.error);
+            }
+        } catch (error) {
+            showError(mergeResult, 'ネットワークエラーが発生しました');
+        } finally {
+            loading.classList.add('hidden');
+        }
+    });
+
+    // ドラッグ&ドロップのセットアップ
+    setupDragDrop(splitFileInput, document.querySelector('label[for="split-file"]'));
+    setupDragDrop(mergeFilesInput, document.querySelector('label[for="merge-files"]'));
+});

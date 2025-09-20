@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- AdSense 所有権確認メタタグ -->
+    <meta name="google-adsense-account" content="ca-pub-3226248910880387">
+    
+    <title>{% block title %}PDF分割・結合ツール{% endblock %}</title>
+    
+    <!-- Google AdSense 自動広告 -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3226248910880387"
+         crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>PDF分割・結合ツール</h1>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 PDF分割・結合ツール. All rights reserved.</p>
+        <a href="/privacy">プライバシーポリシー</a>
+    </footer>
+
+    <!-- 控えめなCookie同意バナー -->
+    <div id="cookie-banner" class="cookie-banner" style="display: none;">
+        <div class="cookie-content">
+            <p>Cookieを使用してサービスを向上させています。</p>
+            <div class="cookie-buttons">
+                <button id="accept-cookies" class="btn-accept">OK</button>
+                <button id="decline-cookies" class="btn-decline">拒否</button>
+                <a href="/privacy" class="privacy-link">詳細</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const banner = document.getElementById('cookie-banner');
+            const acceptBtn = document.getElementById('accept-cookies');
+            const declineBtn = document.getElementById('decline-cookies');
+            
+            // 初回のみ表示
+            if (!localStorage.getItem('cookies_decided')) {
+                setTimeout(() => banner.style.display = 'block', 1000);
+            }
+            
+            acceptBtn.addEventListener('click', function() {
+                localStorage.setItem('cookies_accepted', 'true');
+                localStorage.setItem('cookies_decided', 'true');
+                banner.style.display = 'none';
+            });
+            
+            declineBtn.addEventListener('click', function() {
+                localStorage.setItem('cookies_accepted', 'false');
+                localStorage.setItem('cookies_decided', 'true');
+                banner.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

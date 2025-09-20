@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <h2 class="hero-title">PDFCUTTER</h2>
+    <p class="hero-subtitle">ブラウザ上でPDFの分割・結合が可能です</p>
+</div>
+
+<div class="tools-container">
+    <div class="tool-card" id="split-tool">
+        <div class="tool-header">
+            <i class="fas fa-cut"></i>
+            <h3>PDFを分割！</h3>
+        </div>
+        <p class="tool-description">PDFファイルをページごとに分割します</p>
+        
+        <div class="file-upload">
+            <input type="file" id="split-file" accept=".pdf" class="file-input">
+            <label for="split-file" class="file-label">
+                <i class="fas fa-upload"></i>
+                PDFファイルを選択
+            </label>
+        </div>
+        
+        <button id="split-btn" class="action-btn" disabled>
+            <i class="fas fa-cut"></i>
+            分割実行
+        </button>
+        
+        <div id="split-result" class="result-container"></div>
+    </div>
+
+    <div class="tool-card" id="merge-tool">
+        <div class="tool-header">
+            <i class="fas fa-compress"></i>
+            <h3>PDFを結合！</h3>
+        </div>
+        <p class="tool-description">複数のPDFファイルを1つに結合します</p>
+        
+        <div class="file-upload">
+            <input type="file" id="merge-files" accept=".pdf" multiple class="file-input">
+            <label for="merge-files" class="file-label">
+                <i class="fas fa-upload"></i>
+                PDFファイルを選択（複数可）
+            </label>
+        </div>
+        
+        <div id="file-list" class="file-list"></div>
+        
+        <button id="merge-btn" class="action-btn" disabled>
+            <i class="fas fa-compress"></i>
+            結合実行
+        </button>
+        
+        <div id="merge-result" class="result-container"></div>
+    </div>
+</div>
+
+<div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <p>処理中...</p>
+</div>
+{% endblock %}
