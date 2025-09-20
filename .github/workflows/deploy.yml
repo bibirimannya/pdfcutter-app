@@ -20,9 +20,20 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
+          # デプロイディレクトリの準備
+          sudo mkdir -p /var/www/pdfcutter-app
+          sudo chown -R ubuntu:ubuntu /var/www/pdfcutter-app
           cd /var/www/pdfcutter-app
-          git pull origin main
-          docker-compose down
+          
+          # 初回の場合はクローン、そうでなければプル
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/bibirimannya/pdfcutter-app.git .
+          else
+            git pull origin main
+          fi
+          
+          # Dockerコンテナの更新
+          docker-compose down || true
           docker-compose build --no-cache
           docker-compose up -d
-          docker system prune -f
+          docker system prune -f || true
