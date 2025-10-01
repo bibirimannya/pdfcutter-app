@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}PDF結合 - 複数PDFを1つに結合 | PDFCUTTER{% endblock %}
-{% block description %}複数のPDFファイルを1つに結合できる無料ツール。ドラッグ&ドロップで簡単操作。登録不要で安全・高速処理。{% endblock %}
+{% block title %}PDFページ抽出 - 必要なページのみ抽出 | PDFCUTTER{% endblock %}
+{% block description %}PDFから必要なページのみを選択して新しいPDFファイルとして抽出できる無料ツール。ドラッグ&ドロップで簡単操作。登録不要で安全・高速処理。{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -13,8 +13,8 @@
     </div>
 
     <div class="hero-section">
-        <h1 class="page-title">PDF結合</h1>
-        <p class="page-subtitle">複数のPDFファイルを1つにまとめる</p>
+        <h1 class="page-title">PDFページ抽出</h1>
+        <p class="page-subtitle">必要なページのみを選択して新しいPDFとして保存</p>
     </div>
 
     <div class="tool-container">
@@ -24,29 +24,52 @@
                     <i class="fas fa-cloud-upload-alt"></i>
                     <h3>PDFファイルをここにドロップ</h3>
                     <p>または下のボタンからファイルを選択</p>
-                    <button type="button" class="select-files-btn" id="selectFilesBtn">
+                    <button type="button" class="select-files-btn" id="selectFileBtn">
                         <i class="fas fa-folder-open"></i>
                         ファイルを選択
                     </button>
                 </div>
-                <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;">
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
             </div>
         </div>
 
-        <div class="files-section" id="filesSection" style="display: none;">
+        <div class="selected-file-section" id="selectedFileSection" style="display: none;">
             <div class="section-header">
                 <h3>選択されたファイル</h3>
-                <p class="file-count">0個のファイル</p>
-            </div>
-            <div class="file-list" id="fileList"></div>
-            <div class="action-buttons">
-                <button type="button" class="clear-btn" id="clearBtn">
-                    <i class="fas fa-trash"></i>
-                    すべてクリア
+                <button type="button" class="clear-btn" id="clearFileBtn">
+                    <i class="fas fa-times"></i>
+                    ファイルをクリア
                 </button>
-                <button type="button" class="merge-btn" id="mergeBtn">
-                    <i class="fas fa-compress"></i>
-                    PDFを結合する
+            </div>
+            <div class="selected-file" id="selectedFile"></div>
+        </div>
+
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="section-header">
+                <h3>抽出するページを選択</h3>
+                <div class="selection-controls">
+                    <button type="button" class="control-btn" id="selectAllBtn">
+                        <i class="fas fa-check-square"></i>
+                        すべて選択
+                    </button>
+                    <button type="button" class="control-btn" id="deselectAllBtn">
+                        <i class="fas fa-square"></i>
+                        選択解除
+                    </button>
+                </div>
+            </div>
+            
+            <div class="page-info">
+                <p class="total-pages">総ページ数: <span id="totalPagesCount">0</span>ページ</p>
+                <p class="selected-count">抽出対象: <span id="selectedCount">0</span>ページ</p>
+            </div>
+
+            <div class="page-grid" id="pageGrid"></div>
+
+            <div class="action-buttons">
+                <button type="button" class="delete-btn" id="extractBtn" disabled>
+                    <i class="fas fa-download"></i>
+                    選択ページを抽出
                 </button>
             </div>
         </div>
@@ -59,27 +82,35 @@
     <div class="info-section">
         <div class="info-grid">
             <div class="info-card">
+                <i class="fas fa-eye"></i>
+                <h4>ページプレビュー</h4>
+                <p>抽出前にページ内容をプレビューで確認できます。</p>
+            </div>
+            <div class="info-card">
                 <i class="fas fa-shield-alt"></i>
                 <h4>安全・プライベート</h4>
                 <p>ファイルは処理後自動削除。サーバーに保存されません。</p>
             </div>
             <div class="info-card">
-                <i class="fas fa-bolt"></i>
-                <h4>高速処理</h4>
-                <p>最新技術により、大容量ファイルも高速で処理します。</p>
-            </div>
-            <div class="info-card">
-                <i class="fas fa-mobile-alt"></i>
-                <h4>全デバイス対応</h4>
-                <p>PC、スマホ、タブレットどこからでもご利用いただけます。</p>
+                <i class="fas fa-undo"></i>
+                <h4>元ファイル保護</h4>
+                <p>元のファイルは変更されず、新しいファイルが生成されます。</p>
             </div>
         </div>
     </div>
 
-    <!-- 全機能一覧セクション -->
     <div class="all-features-section">
         <h2 class="features-title">その他の便利な機能</h2>
         <div class="features-grid">
+            <a href="{{ url_for('index') }}" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-object-group"></i>
+                </div>
+                <h3>PDF結合</h3>
+                <p>複数のPDFファイルを1つにまとめます。ドラッグ&ドロップで簡単結合。</p>
+                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
+            </a>
+
             <a href="/split" class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-cut"></i>
@@ -98,15 +129,6 @@
                 <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
             </a>
 
-            <a href="/extract" class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-file-export"></i>
-                </div>
-                <h3>ページ抽出</h3>
-                <p>必要なページのみを抽出して新しいPDFとして保存できます。</p>
-                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
-            </a>
-
             <a href="/reorder" class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-sort"></i>
@@ -121,26 +143,5 @@
 
 <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 <script src="{{ url_for('static', filename='js/fileHandler.js') }}"></script>
-<script src="{{ url_for('static', filename='js/merge.js') }}"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Merge page DOM loaded');
-    
-    const fileHandler = new FileHandler(window.pdfProcessor);
-    const merger = new PDFMerger(window.pdfProcessor, fileHandler);
-    
-    window.fileHandler = fileHandler;
-    window.merger = merger;
-    
-    const observer = new MutationObserver(() => {
-        merger.updateMergeButton();
-    });
-    
-    const filesSection = document.getElementById('filesSection');
-    if (filesSection) {
-        observer.observe(filesSection, { childList: true, subtree: true });
-    }
-});
-</script>
+<script src="{{ url_for('static', filename='js/extract.js') }}"></script>
 {% endblock %}

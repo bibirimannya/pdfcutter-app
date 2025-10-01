@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}PDFページ並び替え - ページ順序を自由に変更 | PDFCUTTER{% endblock %}
+{% block description %}PDFのページ順序をドラッグ&ドロップで簡単に変更。直感的操作でページを並び替えて新しいPDFを作成。登録不要で安全・高速処理。{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- ローディング表示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>処理中...</p>
+        </div>
+    </div>
+
+    <div class="hero-section">
+        <h1 class="page-title">PDFページ並び替え</h1>
+        <p class="page-subtitle">ドラッグ&ドロップでページ順序を自由に変更</p>
+    </div>
+
+    <div class="tool-container">
+        <!-- ファイル選択セクション -->
+        <div class="upload-section">
+            <div class="file-drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-sort"></i>
+                    <h3>PDFファイルをここにドロップ</h3>
+                    <p>または下のボタンからファイルを選択</p>
+                    <button type="button" class="select-files-btn" id="selectFilesBtn">
+                        <i class="fas fa-folder-open"></i>
+                        ファイルを選択
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            </div>
+        </div>
+
+        <!-- 選択されたファイルセクション -->
+        <div class="selected-file-section" id="selectedFileSection" style="display: none;">
+            <div class="section-header">
+                <h3>選択されたファイル</h3>
+                <button type="button" class="clear-btn" id="clearBtn">
+                    <i class="fas fa-times"></i>
+                    クリア
+                </button>
+            </div>
+            <div class="selected-file" id="selectedFile">
+                <!-- ファイル情報がここに挿入される -->
+            </div>
+        </div>
+
+        <!-- ページプレビューセクション -->
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="section-header">
+                <h3>ページ並び替え</h3>
+                <div class="reorder-controls">
+                    <button type="button" class="control-btn" id="resetOrderBtn">
+                        <i class="fas fa-undo"></i>
+                        元の順序に戻す
+                    </button>
+                    <button type="button" class="control-btn" id="reverseOrderBtn">
+                        <i class="fas fa-exchange-alt"></i>
+                        順序を反転
+                    </button>
+                </div>
+            </div>
+
+            <!-- ページ情報 -->
+            <div class="page-info" id="pageInfo">
+                <p>総ページ数: <span id="totalPages">0</span>ページ</p>
+                <p>並び替え状況: <span id="orderStatus">元の順序</span></p>
+                <p>変更済みページ: <span id="modifiedPages">0</span>ページ</p>
+            </div>
+
+            <!-- 操作ヒント -->
+            <div class="reorder-hint">
+                <i class="fas fa-info-circle"></i>
+                <p>ページをドラッグ&ドロップして順序を変更できます。番号は自動で更新されます。</p>
+            </div>
+
+            <!-- ページグリッド（並び替え可能） -->
+            <div class="sortable-grid" id="sortableGrid">
+                <!-- ページアイテムがここに動的に追加される -->
+            </div>
+
+            <!-- 並び替え実行ボタン -->
+            <div class="action-section">
+                <button type="button" class="reorder-btn" id="reorderBtn" disabled>
+                    <i class="fas fa-sort"></i>
+                    並び替えを実行してダウンロード
+                </button>
+            </div>
+        </div>
+
+        <!-- 結果セクション -->
+        <div class="result-section" id="resultSection" style="display: none;">
+            <div class="result-content" id="resultContent">
+                <!-- 結果がここに表示される -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 情報セクション -->
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-card">
+                <i class="fas fa-hand-rock"></i>
+                <h4>直感的操作</h4>
+                <p>ドラッグ&ドロップでページを自由に移動。視覚的に分かりやすい操作です。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-eye"></i>
+                <h4>リアルタイムプレビュー</h4>
+                <p>ページを移動すると、即座に番号が更新されます。結果が一目で分かります。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h4>安全・プライベート</h4>
+                <p>ファイルは処理後自動削除。サーバーに保存されません。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScriptファイルの読み込み（順序重要） -->
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fileHandler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reorder.js') }}"></script>
+
+<script>
+console.log('Reorder page loaded');
+</script>
+{% endblock %}

@@ -1,63 +1,109 @@
 {% extends "base.html" %}
 
+{% block title %}PDF結合 - 複数PDFを1つに結合 | PDFCUTTER{% endblock %}
+{% block description %}複数のPDFファイルを1つに結合できる無料ツール。ドラッグ&ドロップで簡単操作。登録不要で安全・高速処理。{% endblock %}
+
 {% block content %}
-<div class="hero">
-    <h2 class="hero-title">PDFCUTTER</h2>
-    <p class="hero-subtitle">ブラウザ上でPDFの分割・結合が可能です</p>
-</div>
-
-<div class="tools-container">
-    <div class="tool-card" id="split-tool">
-        <div class="tool-header">
-            <i class="fas fa-cut"></i>
-            <h3>PDFを分割！</h3>
+<div class="container">
+    <!-- ローディング表示を追加 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>処理中...</p>
         </div>
-        <p class="tool-description">PDFファイルをページごとに分割します</p>
-        
-        <div class="file-upload">
-            <input type="file" id="split-file" accept=".pdf" class="file-input">
-            <label for="split-file" class="file-label">
-                <i class="fas fa-upload"></i>
-                PDFファイルを選択
-            </label>
-        </div>
-        
-        <button id="split-btn" class="action-btn" disabled>
-            <i class="fas fa-cut"></i>
-            分割実行
-        </button>
-        
-        <div id="split-result" class="result-container"></div>
     </div>
 
-    <div class="tool-card" id="merge-tool">
-        <div class="tool-header">
-            <i class="fas fa-compress"></i>
-            <h3>PDFを結合！</h3>
+    <div class="hero-section">
+        <h1 class="page-title">PDF結合</h1>
+        <p class="page-subtitle">複数のPDFファイルを1つにまとめる</p>
+    </div>
+
+    <div class="tool-container">
+        <div class="upload-section">
+            <div class="file-drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>PDFファイルをここにドロップ</h3>
+                    <p>または下のボタンからファイルを選択</p>
+                    <button type="button" class="select-files-btn" id="selectFilesBtn">
+                        <i class="fas fa-folder-open"></i>
+                        ファイルを選択
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;">
+            </div>
         </div>
-        <p class="tool-description">複数のPDFファイルを1つに結合します</p>
-        
-        <div class="file-upload">
-            <input type="file" id="merge-files" accept=".pdf" multiple class="file-input">
-            <label for="merge-files" class="file-label">
-                <i class="fas fa-upload"></i>
-                PDFファイルを選択（複数可）
-            </label>
+
+        <div class="files-section" id="filesSection" style="display: none;">
+            <div class="section-header">
+                <h3>選択されたファイル</h3>
+                <p class="file-count">0個のファイル</p>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="action-buttons">
+                <button type="button" class="clear-btn" id="clearBtn">
+                    <i class="fas fa-trash"></i>
+                    すべてクリア
+                </button>
+                <button type="button" class="merge-btn" id="mergeBtn">
+                    <i class="fas fa-compress"></i>
+                    PDFを結合する
+                </button>
+            </div>
         </div>
-        
-        <div id="file-list" class="file-list"></div>
-        
-        <button id="merge-btn" class="action-btn" disabled>
-            <i class="fas fa-compress"></i>
-            結合実行
-        </button>
-        
-        <div id="merge-result" class="result-container"></div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h4>安全・プライベート</h4>
+                <p>ファイルは処理後自動削除。サーバーに保存されません。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-bolt"></i>
+                <h4>高速処理</h4>
+                <p>最新技術により、大容量ファイルも高速で処理します。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h4>全デバイス対応</h4>
+                <p>PC、スマホ、タブレットどこからでもご利用いただけます。</p>
+            </div>
+        </div>
     </div>
 </div>
-
-<div id="loading" class="loading hidden">
-    <div class="spinner"></div>
-    <p>処理中...</p>
-</div>
+    <!-- 共通JavaScript（読み込み順序重要） -->
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fileHandler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/merge.js') }}"></script>
+    
+    <!-- ページ固有の初期化スクリプト（ここに追加） -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Merge page DOM loaded');
+        
+        // インスタンス作成
+        const fileHandler = new FileHandler(window.pdfProcessor);
+        const merger = new PDFMerger(window.pdfProcessor, fileHandler);
+        
+        // グローバルアクセス用（HTMLのonclick属性で使用）
+        window.fileHandler = fileHandler;
+        window.merger = merger;
+        
+        // UIイベントの追加監視（結合ボタンの有効/無効切り替え用）
+        const observer = new MutationObserver(() => {
+            merger.updateMergeButton();
+        });
+        
+        const filesSection = document.getElementById('filesSection');
+        if (filesSection) {
+            observer.observe(filesSection, { childList: true, subtree: true });
+        }
+    });
+    </script>
 {% endblock %}

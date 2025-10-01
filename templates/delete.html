@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}PDFページ削除 - 不要なページを削除 | PDFCUTTER{% endblock %}
+{% block description %}PDFファイルから不要なページを削除できる無料ツール。ページプレビュー機能付きで簡単操作。登録不要で安全・高速処理。{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div id="loading" class="loading hidden">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>処理中...</p>
+        </div>
+    </div>
+
+    <div class="hero-section">
+        <h1 class="page-title">PDFページ削除</h1>
+        <p class="page-subtitle">不要なページを選択して削除</p>
+    </div>
+
+    <div class="tool-container">
+        <div class="upload-section">
+            <div class="file-drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>PDFファイルをここにドロップ</h3>
+                    <p>または下のボタンからファイルを選択</p>
+                    <button type="button" class="select-files-btn" id="selectFileBtn">
+                        <i class="fas fa-folder-open"></i>
+                        ファイルを選択
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            </div>
+        </div>
+
+        <div class="selected-file-section" id="selectedFileSection" style="display: none;">
+            <div class="section-header">
+                <h3>選択されたファイル</h3>
+                <button type="button" class="clear-btn" id="clearFileBtn">
+                    <i class="fas fa-times"></i>
+                    ファイルをクリア
+                </button>
+            </div>
+            <div class="selected-file" id="selectedFile"></div>
+        </div>
+
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="section-header">
+                <h3>削除するページを選択</h3>
+                <div class="selection-controls">
+                    <button type="button" class="control-btn" id="selectAllBtn">
+                        <i class="fas fa-check-square"></i>
+                        すべて選択
+                    </button>
+                    <button type="button" class="control-btn" id="deselectAllBtn">
+                        <i class="fas fa-square"></i>
+                        選択解除
+                    </button>
+                </div>
+            </div>
+            
+            <div class="page-info">
+                <p class="total-pages">総ページ数: <span id="totalPagesCount">0</span>ページ</p>
+                <p class="selected-count">削除対象: <span id="selectedCount">0</span>ページ</p>
+                <p class="remaining-count">残りページ: <span id="remainingCount">0</span>ページ</p>
+            </div>
+
+            <div class="page-grid" id="pageGrid"></div>
+
+            <div class="action-buttons">
+                <button type="button" class="delete-btn" id="deleteBtn" disabled>
+                    <i class="fas fa-trash-alt"></i>
+                    選択ページを削除
+                </button>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-card">
+                <i class="fas fa-eye"></i>
+                <h4>ページプレビュー</h4>
+                <p>削除前にページ内容をプレビューで確認できます。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h4>安全・プライベート</h4>
+                <p>ファイルは処理後自動削除。サーバーに保存されません。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-undo"></i>
+                <h4>元ファイル保護</h4>
+                <p>元のファイルは変更されず、新しいファイルが生成されます。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="all-features-section">
+        <h2 class="features-title">その他の便利な機能</h2>
+        <div class="features-grid">
+            <a href="{{ url_for('index') }}" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-object-group"></i>
+                </div>
+                <h3>PDF結合</h3>
+                <p>複数のPDFファイルを1つにまとめます。ドラッグ&ドロップで簡単結合。</p>
+                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="/split" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-cut"></i>
+                </div>
+                <h3>PDF分割</h3>
+                <p>PDFを複数のファイルに分割します。ページ指定や範囲指定が可能です。</p>
+                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="/extract" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <h3>ページ抽出</h3>
+                <p>必要なページのみを抽出して新しいPDFとして保存できます。</p>
+                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="/reorder" class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-sort"></i>
+                </div>
+                <h3>ページ並び替え</h3>
+                <p>ドラッグ&ドロップで自由にページの順序を変更できます。</p>
+                <span class="feature-link">詳しく見る <i class="fas fa-arrow-right"></i></span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fileHandler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/delete.js') }}"></script>
+{% endblock %}

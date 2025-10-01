@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}お問い合わせ - PDFCUTTER{% endblock %}
+{% block description %}PDFCUTTERへのお問い合わせはこちらから。ご質問、ご要望、不具合報告など、お気軽にお問い合わせください。{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero-section">
+        <h1 class="page-title">お問い合わせ</h1>
+        <p class="page-subtitle">ご質問やご要望がございましたら、お気軽にお問い合わせください</p>
+    </div>
+
+    <div class="contact-container">
+        <div class="contact-info-section">
+            <div class="contact-info-card">
+                <i class="fas fa-clock"></i>
+                <h3>対応時間</h3>
+                <p>平日 9:00 - 18:00<br>（土日祝日を除く）</p>
+            </div>
+            <div class="contact-info-card">
+                <i class="fas fa-reply"></i>
+                <h3>返信時期</h3>
+                <p>通常1-3営業日以内に<br>ご返信いたします</p>
+            </div>
+            <div class="contact-info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>プライバシー</h3>
+                <p>個人情報は厳重に管理し<br>適切に取り扱います</p>
+            </div>
+        </div>
+
+        <div class="contact-form-section">
+            <form id="contactForm" class="contact-form">
+                <div class="form-group">
+                    <label for="name">お名前 <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" required placeholder="山田 太郎">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">メールアドレス <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required placeholder="example@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">件名 <span class="required">*</span></label>
+                    <select id="subject" name="subject" required>
+                        <option value="">選択してください</option>
+                        <option value="question">ご質問</option>
+                        <option value="bug">不具合報告</option>
+                        <option value="feature">機能追加のご要望</option>
+                        <option value="other">その他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">お問い合わせ内容 <span class="required">*</span></label>
+                    <textarea id="message" name="message" rows="8" required placeholder="お問い合わせ内容をご記入ください"></textarea>
+                </div>
+
+                <div class="form-notice">
+                    <p><i class="fas fa-info-circle"></i> お問い合わせいただいた内容は、サービス改善のために使用させていただく場合がございます。</p>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i>
+                    送信する
+                </button>
+            </form>
+
+            <div class="form-result" id="formResult" style="display: none;"></div>
+        </div>
+
+        <div class="faq-section">
+            <h2 class="faq-title">よくあるご質問</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>ファイルは安全ですか？</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>はい、アップロードされたファイルは処理後自動的に削除され、サーバーに保存されることはありません。</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>ファイルサイズの制限はありますか？</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>1ファイルあたり最大100MBまで、ページ数は500ページまで対応しています。</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>会員登録は必要ですか？</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>いいえ、会員登録なしで全ての機能を無料でご利用いただけます。</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>スマートフォンでも使えますか？</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>はい、スマートフォンやタブレットなど、あらゆるデバイスでご利用いただけます。</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>処理に失敗した場合はどうすれば？</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>ページを再読み込みして再度お試しください。問題が続く場合は、上記フォームからお問い合わせください。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/contact.js') }}"></script>
+{% endblock %}

@@ -1,16 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const splitFileInput = document.getElementById('split-file');
-    const splitBtn = document.getElementById('split-btn');
-    const splitResult = document.getElementById('split-result');
-    
-    const mergeFilesInput = document.getElementById('merge-files');
-    const mergeBtn = document.getElementById('merge-btn');
-    const mergeResult = document.getElementById('merge-result');
-    const fileList = document.getElementById('file-list');
-    
-    const loading = document.getElementById('loading');
+    console.log('DOM loaded');
 
-    // ファイルサイズをフォーマット
+    // 共通要素
+    const loading = document.getElementById('loading');
+    
+    // 結合ページの要素
+    const dropZone = document.querySelector('.file-drop-zone') || document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const selectFilesBtn = document.getElementById('selectFilesBtn') || document.getElementById('selectFileBtn');
+    const filesSection = document.getElementById('filesSection');
+    const fileList = document.getElementById('fileList');
+    const clearBtn = document.getElementById('clearBtn');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const resultSection = document.getElementById('resultSection');
+    const resultContent = document.getElementById('resultContent');
+
+    // 分割ページ専用要素
+    const splitOptionsSection = document.getElementById('splitOptionsSection');
+    const selectedFile = document.getElementById('selectedFile');
+    const splitBtn = document.getElementById('splitBtn');
+    const rangeInputs = document.getElementById('rangeInputs');
+    const specificInputs = document.getElementById('specificInputs');
+    const startPageInput = document.getElementById('startPage');
+    const endPageInput = document.getElementById('endPage');
+    const specificPagesInput = document.getElementById('specificPages');
+
+    let selectedFiles = []; // グローバルスコープで宣言
+    let currentPdfFile = null; // 分割用の単一ファイル
+
+    // デバッグ用：selectedFilesをwindowオブジェクトに追加
+    window.selectedFiles = selectedFiles;
+
+    // ユーティリティ関数
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -19,192 +40,448 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // エラーメッセージを表示
+    function showLoading() {
+        if (loading) {
+            loading.classList.remove('hidden');
+        }
+    }
+
+    function hideLoading() {
+        if (loading) {
+            loading.classList.add('hidden');
+        }
+    }
+
     function showError(container, message) {
-        container.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-triangle"></i>
-                ${message}
-            </div>
-        `;
+        if (container) {
+            container.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        console.error('Error:', message);
     }
 
-    // 成功メッセージを表示
-    function showSuccess(container, message) {
-        container.innerHTML = `
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                ${message}
-            </div>
-        `;
-    }
+    // 分割オプション切り替え処理
+    if (rangeInputs || specificInputs) {
+        const splitTypeRadios = document.querySelectorAll('input[name="splitType"]');
+        splitTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // すべての入力エリアを非表示
+                if (rangeInputs) rangeInputs.style.display = 'none';
+                if (specificInputs) specificInputs.style.display = 'none';
 
-    // ドラッグ&ドロップ機能
-    function setupDragDrop(input, label) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            label.addEventListener(eventName, preventDefaults, false);
+                // 選択されたタイプに応じて表示
+                if (this.value === 'range' && rangeInputs) {
+                    rangeInputs.style.display = 'block';
+                } else if (this.value === 'specific' && specificInputs) {
+                    specificInputs.style.display = 'block';
+                }
+            });
         });
+    }
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+    // PDF結合・分割共通機能
+    if (dropZone && fileInput) {
+        // ファイル選択ボタンクリック
+        if (selectFilesBtn) {
+            selectFilesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Select button clicked');
+                fileInput.click();
+            });
         }
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            label.addEventListener(eventName, () => label.classList.add('dragover'), false);
+        // ドラッグ&ドロップ機能
+        dropZone.addEventListener('click', function(e) {
+            if (e.target.closest('.select-files-btn') || e.target.closest('#selectFileBtn')) {
+                return;
+            }
+            console.log('Drop zone clicked');
+            fileInput.click();
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            label.addEventListener(eventName, () => label.classList.remove('dragover'), false);
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
         });
 
-        label.addEventListener('drop', handleDrop, false);
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
 
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
             
-            if (input.multiple) {
-                input.files = files;
-                updateFileList(files);
-                mergeBtn.disabled = files.length < 2;
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            console.log('Files dropped:', files.length);
+            
+            if (files.length > 0) {
+                handleFileSelection(files);
             } else {
-                if (files.length > 0) {
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(files[0]);
-                    input.files = dataTransfer.files;
-                    splitBtn.disabled = false;
+                alert('PDFファイルを選択してください。');
+            }
+        });
+
+        // ファイル選択
+        fileInput.addEventListener('change', function(e) {
+            console.log('=== File input change event ===');
+            console.log('Files selected:', this.files.length);
+            
+            if (this.files.length > 0) {
+                const files = Array.from(this.files);
+                handleFileSelection(files);
+            } else {
+                console.log('No files selected');
+            }
+        });
+
+        // ファイル選択処理（結合・分割対応）
+        function handleFileSelection(files) {
+            if (splitOptionsSection) {
+                // 分割ページの場合：単一ファイルのみ
+                if (files.length > 1) {
+                    alert('分割機能では1つのPDFファイルのみ選択できます。');
+                    return;
+                }
+                currentPdfFile = files[0];
+                displaySelectedFile(currentPdfFile);
+                if (splitOptionsSection) splitOptionsSection.style.display = 'block';
+            } else {
+                // 結合ページの場合：複数ファイル対応
+                selectedFiles = [...files];
+                window.selectedFiles = selectedFiles;
+                console.log('Updated selectedFiles:', selectedFiles.length);
+                displayFileList();
+                updateUI();
+            }
+        }
+
+        // 分割用：選択されたファイル表示
+        function displaySelectedFile(file) {
+            if (selectedFile) {
+                selectedFile.innerHTML = `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <div class="file-details">
+                                <h4>${file.name}</h4>
+                                <p>${formatFileSize(file.size)}</p>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button type="button" class="remove-file-btn" onclick="clearSplitFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 結合用：ファイル一覧表示
+        function displayFileList() {
+            console.log('=== Displaying file list ===');
+            console.log('selectedFiles length:', selectedFiles.length);
+            
+            if (!fileList) {
+                console.error('fileList element not found');
+                return;
+            }
+
+            if (selectedFiles.length === 0) {
+                fileList.innerHTML = '<p>ファイルが選択されていません</p>';
+                return;
+            }
+
+            let html = '';
+            selectedFiles.forEach((file, index) => {
+                console.log(`File ${index}: ${file.name}`);
+                html += `
+                    <div class="file-item" data-index="${index}">
+                        <div class="file-info">
+                            <i class="fas fa-file-pdf file-icon"></i>
+                            <div class="file-details">
+                                <h4>${file.name}</h4>
+                                <p>${formatFileSize(file.size)}</p>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button type="button" class="remove-file-btn" onclick="removeFile(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            fileList.innerHTML = html;
+            console.log('File list HTML updated');
+        }
+
+        // ファイル削除
+        window.removeFile = function(index) {
+            console.log('Removing file at index:', index);
+            selectedFiles.splice(index, 1);
+            window.selectedFiles = selectedFiles;
+            displayFileList();
+            updateUI();
+        };
+
+        // 分割ファイルクリア
+        window.clearSplitFile = function() {
+            currentPdfFile = null;
+            fileInput.value = '';
+            if (splitOptionsSection) splitOptionsSection.style.display = 'none';
+            if (resultSection) resultSection.style.display = 'none';
+            console.log('Split file cleared');
+        };
+
+        // UI更新
+        function updateUI() {
+            const fileCount = selectedFiles.length;
+            console.log('=== Updating UI ===');
+            console.log('File count:', fileCount);
+            
+            const fileCountElement = document.querySelector('.file-count');
+            
+            if (fileCountElement) {
+                fileCountElement.textContent = `${fileCount}個のファイル`;
+            }
+
+            if (filesSection) {
+                if (fileCount > 0) {
+                    filesSection.style.display = 'block';
+                    if (mergeBtn) {
+                        mergeBtn.disabled = fileCount < 2;
+                        console.log('Merge button disabled:', fileCount < 2);
+                    }
+                } else {
+                    filesSection.style.display = 'none';
+                    if (mergeBtn) mergeBtn.disabled = true;
                 }
             }
         }
-    }
 
-    // ファイルリストを更新
-    function updateFileList(files) {
-        fileList.innerHTML = '';
-        Array.from(files).forEach((file, index) => {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <div>
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-size">${formatFileSize(file.size)}</div>
-                </div>
-            `;
-            fileList.appendChild(fileItem);
-        });
-    }
-
-    // 分割機能
-    splitFileInput.addEventListener('change', function() {
-        splitBtn.disabled = this.files.length === 0;
-        splitResult.innerHTML = '';
-    });
-
-    splitBtn.addEventListener('click', async function() {
-        const file = splitFileInput.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        loading.classList.remove('hidden');
-
-        try {
-            const response = await fetch('/split', {
-                method: 'POST',
-                body: formData
+        // クリアボタン
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                if (splitOptionsSection) {
+                    // 分割ページの場合
+                    currentPdfFile = null;
+                    if (splitOptionsSection) splitOptionsSection.style.display = 'none';
+                } else {
+                    // 結合ページの場合
+                    selectedFiles = [];
+                    window.selectedFiles = [];
+                    if (filesSection) filesSection.style.display = 'none';
+                }
+                
+                fileInput.value = '';
+                if (resultSection) resultSection.style.display = 'none';
+                console.log('Files cleared');
             });
+        }
 
-            const result = await response.json();
+        // 結合ボタン
+        if (mergeBtn) {
+            mergeBtn.addEventListener('click', function() {
+                console.log('=== 結合処理開始 ===');
+                console.log('selectedFiles:', selectedFiles);
+                console.log('selectedFiles.length:', selectedFiles.length);
+                console.log('window.selectedFiles:', window.selectedFiles);
+                
+                const currentFiles = selectedFiles.length > 0 ? selectedFiles : Array.from(fileInput.files);
+                console.log('currentFiles:', currentFiles);
+                console.log('currentFiles.length:', currentFiles.length);
+                
+                if (currentFiles.length < 2) {
+                    console.log('Error: Not enough files. Current count:', currentFiles.length);
+                    showError(resultContent, `2つ以上のファイルを選択してください。現在: ${currentFiles.length}個`);
+                    if (resultSection) resultSection.style.display = 'block';
+                    return;
+                }
 
-            if (result.success) {
-                splitResult.innerHTML = `
-                    <div class="success-message">
-                        <i class="fas fa-check-circle"></i>
-                        ${result.message}
-                    </div>
-                `;
-
-                result.files.forEach(file => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'result-item';
-                    resultItem.innerHTML = `
-                        <div class="result-info">
-                            <div class="result-name">${file.filename}</div>
-                            <div class="result-page">ページ ${file.page}</div>
-                        </div>
-                        <a href="${file.download_url}" class="download-btn">
-                            <i class="fas fa-download"></i>
-                            ダウンロード
-                        </a>
-                    `;
-                    splitResult.appendChild(resultItem);
+                const formData = new FormData();
+                currentFiles.forEach((file, index) => {
+                    console.log(`Adding file ${index}: ${file.name} (${file.size} bytes)`);
+                    formData.append('files[]', file);
                 });
-            } else {
-                showError(splitResult, result.error);
-            }
-        } catch (error) {
-            showError(splitResult, 'ネットワークエラーが発生しました');
-        } finally {
-            loading.classList.add('hidden');
-        }
-    });
 
-    // 結合機能
-    mergeFilesInput.addEventListener('change', function() {
-        updateFileList(this.files);
-        mergeBtn.disabled = this.files.length < 2;
-        mergeResult.innerHTML = '';
-    });
+                showLoading();
+                console.log('Sending request to /merge');
 
-    mergeBtn.addEventListener('click', async function() {
-        const files = mergeFilesInput.files;
-        if (files.length < 2) return;
-
-        const formData = new FormData();
-        Array.from(files).forEach(file => {
-            formData.append('files[]', file);
-        });
-
-        loading.classList.remove('hidden');
-
-        try {
-            const response = await fetch('/merge', {
-                method: 'POST',
-                body: formData
+                fetch('/merge', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    hideLoading();
+                    
+                    if (data.success) {
+                        displayMergeResult(data.filename, data.download_url);
+                        console.log('Merge successful');
+                    } else {
+                        console.log('Merge failed:', data.error);
+                        showError(resultContent, data.error || '結合に失敗しました。');
+                    }
+                    if (resultSection) resultSection.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    hideLoading();
+                    showError(resultContent, '処理中にエラーが発生しました: ' + error.message);
+                    if (resultSection) resultSection.style.display = 'block';
+                });
             });
+        }
 
-            const result = await response.json();
+        // 分割ボタン
+        if (splitBtn) {
+            splitBtn.addEventListener('click', function() {
+                console.log('=== 分割処理開始 ===');
+                
+                if (!currentPdfFile) {
+                    showError(resultContent, 'PDFファイルを選択してください。');
+                    if (resultSection) resultSection.style.display = 'block';
+                    return;
+                }
 
-            if (result.success) {
-                mergeResult.innerHTML = `
-                    <div class="success-message">
+                const splitType = document.querySelector('input[name="splitType"]:checked').value;
+                const formData = new FormData();
+                formData.append('file', currentPdfFile);
+                formData.append('split_type', splitType);
+
+                // 分割タイプに応じてパラメータ追加
+                if (splitType === 'range') {
+                    const startPage = startPageInput ? startPageInput.value : '';
+                    const endPage = endPageInput ? endPageInput.value : '';
+                    
+                    if (!startPage || !endPage) {
+                        showError(resultContent, '開始ページと終了ページを入力してください。');
+                        if (resultSection) resultSection.style.display = 'block';
+                        return;
+                    }
+                    
+                    formData.append('start_page', startPage);
+                    formData.append('end_page', endPage);
+                } else if (splitType === 'specific') {
+                    const specificPages = specificPagesInput ? specificPagesInput.value : '';
+                    
+                    if (!specificPages.trim()) {
+                        showError(resultContent, 'ページ番号を入力してください。');
+                        if (resultSection) resultSection.style.display = 'block';
+                        return;
+                    }
+                    
+                    formData.append('specific_pages', specificPages);
+                }
+
+                showLoading();
+                console.log('Sending request to /split');
+
+                fetch('/split', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    hideLoading();
+                    
+                    if (data.success) {
+                                                displaySplitResult(data.files, data.zip_url);
+                        console.log('Split successful');
+                    } else {
+                        console.log('Split failed:', data.error);
+                        showError(resultContent, data.error || '分割に失敗しました。');
+                    }
+                    if (resultSection) resultSection.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    hideLoading();
+                    showError(resultContent, '処理中にエラーが発生しました: ' + error.message);
+                    if (resultSection) resultSection.style.display = 'block';
+                });
+            });
+        }
+
+        function displayMergeResult(filename, downloadUrl) {
+            if (resultContent) {
+                resultContent.innerHTML = `
+                    <div class="result-success">
                         <i class="fas fa-check-circle"></i>
-                        ${result.message}
-                    </div>
-                    <div class="result-item">
-                        <div class="result-info">
-                            <div class="result-name">${result.filename}</div>
-                            <div class="result-page">結合完了</div>
-                        </div>
-                        <a href="${result.download_url}" class="download-btn">
+                        <h3>結合完了</h3>
+                        <p>${selectedFiles.length}個のファイルを結合しました</p>
+                        <a href="${downloadUrl}" class="download-btn" download>
                             <i class="fas fa-download"></i>
-                            ダウンロード
+                            結合済みPDFをダウンロード
                         </a>
                     </div>
                 `;
-            } else {
-                showError(mergeResult, result.error);
             }
-        } catch (error) {
-            showError(mergeResult, 'ネットワークエラーが発生しました');
-        } finally {
-            loading.classList.add('hidden');
         }
-    });
 
-    // ドラッグ&ドロップのセットアップ
-    setupDragDrop(splitFileInput, document.querySelector('label[for="split-file"]'));
-    setupDragDrop(mergeFilesInput, document.querySelector('label[for="merge-files"]'));
+        function displaySplitResult(files, zipUrl) {
+            if (resultContent) {
+                let fileListHtml = '';
+                if (files && files.length > 0) {
+                    fileListHtml = files.map(file => `
+                        <div class="split-file-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>${file.filename}</span>
+                            <a href="${file.download_url}" class="download-link" download>
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    `).join('');
+                }
+
+                resultContent.innerHTML = `
+                    <div class="result-success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>分割完了</h3>
+                        <p>${files ? files.length : 0}個のファイルに分割しました</p>
+                        
+                        ${fileListHtml ? `
+                            <div class="split-files-list">
+                                <h4>分割されたファイル:</h4>
+                                ${fileListHtml}
+                            </div>
+                        ` : ''}
+                        
+                        ${zipUrl ? `
+                            <div class="zip-download">
+                                <a href="${zipUrl}" class="download-btn" download>
+                                    <i class="fas fa-download"></i>
+                                    すべてのファイルを一括ダウンロード（ZIP）
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+    } else {
+        console.error('Required elements not found');
+    }
 });

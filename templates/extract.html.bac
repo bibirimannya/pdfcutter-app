@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}PDFページ抽出 - 必要なページのみ抽出 | PDFCUTTER{% endblock %}
+{% block description %}PDFから必要なページのみを選択して新しいPDFファイルとして抽出できる無料ツール。ドラッグ&ドロップで簡単操作。登録不要で安全・高速処理。{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- ローディング表示 -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>処理中...</p>
+        </div>
+    </div>
+
+    <div class="hero-section">
+        <h1 class="page-title">PDFページ抽出</h1>
+        <p class="page-subtitle">必要なページのみを選択して新しいPDFとして保存</p>
+    </div>
+
+    <div class="tool-container">
+        <!-- ファイル選択セクション -->
+        <div class="upload-section">
+            <div class="file-drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>PDFファイルをここにドロップ</h3>
+                    <p>または下のボタンからファイルを選択</p>
+                    <button type="button" class="select-files-btn" id="selectFileBtn">
+                        <i class="fas fa-folder-open"></i>
+                        ファイルを選択
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            </div>
+        </div>
+
+        <!-- 選択されたファイル表示 -->
+        <div class="selected-file-section" id="selectedFileSection" style="display: none;">
+            <div class="section-header">
+                <h3>選択されたファイル</h3>
+                <button type="button" class="clear-btn" id="clearFileBtn">
+                    <i class="fas fa-times"></i>
+                    ファイルをクリア
+                </button>
+            </div>
+            <div class="selected-file" id="selectedFile"></div>
+        </div>
+
+        <!-- ページプレビューセクション -->
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="section-header">
+                <h3>抽出するページを選択</h3>
+                <div class="selection-controls">
+                    <button type="button" class="control-btn" id="selectAllBtn">
+                        <i class="fas fa-check-square"></i>
+                        すべて選択
+                    </button>
+                    <button type="button" class="control-btn" id="deselectAllBtn">
+                        <i class="fas fa-square"></i>
+                        選択解除
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ページ情報 -->
+            <div class="page-info">
+                <p class="total-pages">総ページ数: <span id="totalPagesCount">0</span>ページ</p>
+                <p class="selected-count">抽出対象: <span id="selectedCount">0</span>ページ</p>
+            </div>
+
+            <!-- ページプレビューグリッド -->
+            <div class="page-grid" id="pageGrid">
+                <!-- ページアイテムがここに動的生成される -->
+            </div>
+
+            <!-- 抽出実行ボタン -->
+            <div class="action-buttons">
+                <button type="button" class="delete-btn" id="extractBtn" disabled>
+                    <i class="fas fa-download"></i>
+                    選択ページを抽出
+                </button>
+            </div>
+        </div>
+
+        <!-- 結果セクション -->
+        <div class="result-section" id="resultSection" style="display: none;">
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-card">
+                <i class="fas fa-eye"></i>
+                <h4>ページプレビュー</h4>
+                <p>抽出前にページ内容をプレビューで確認できます。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h4>安全・プライベート</h4>
+                <p>ファイルは処理後自動削除。サーバーに保存されません。</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-undo"></i>
+                <h4>元ファイル保護</h4>
+                <p>元のファイルは変更されず、新しいファイルが生成されます。</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ローディングオーバーレイ -->
+<div class="loading hidden" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>PDFページを抽出しています...</p>
+</div>
+
+<!-- 共通JavaScript（読み込み順序重要） -->
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fileHandler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/extract.js') }}"></script>
+{% endblock %}

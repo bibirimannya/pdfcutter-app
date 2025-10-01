@@ -3,71 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO基本タグ -->
+    <title>{% block title %}【登録不要】PDF結合・分割ツール | 無料で安全・高速処理 | PDFCUTTER{% endblock %}</title>
+    <meta name="description" content="{% block description %}PDFファイルを無料で分割・結合できるWebツール。ページ指定での分割、複数ファイルの結合が簡単に行えます。登録不要で安全・高速処理。{% endblock %}">
+    <meta name="keywords" content="PDF分割,PDF結合,PDF編集,無料,オンライン,ツール,ページ分割,ファイル結合">
     
-    <!-- AdSense 所有権確認メタタグ -->
-    <meta name="google-adsense-account" content="ca-pub-3226248910880387">
+    <!-- Open Graph (SNS対応) -->
+    <meta property="og:title" content="{% block og_title %}PDF分割・結合ツール | PDFCutter{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}PDFを無料で分割・結合。安全で高速なオンラインツール{% endblock %}">
+    <meta property="og:image" content="https://pdfcutter.jp/static/img/ogp.png">
+    <meta property="og:url" content="https://pdfcutter.jp{{ request.path }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PDFCutter">
     
-    <title>{% block title %}PDF分割・結合ツール{% endblock %}</title>
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}PDF分割・結合ツール | PDFCutter{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}PDFを無料で分割・結合。安全で高速なオンラインツール{% endblock %}">
+    <meta name="twitter:image" content="https://pdfcutter.jp/static/img/ogp.png">
     
-    <!-- Google AdSense 自動広告 -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3226248910880387"
-         crossorigin="anonymous"></script>
+    <!-- 技術的なmetaタグ -->
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="PDFCutter">
+    <meta name="copyright" content="PDFCutter">
+    <link rel="canonical" href="https://pdfcutter.jp{{ request.path }}">
     
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T5F83B8JNJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-T5F83B8JNJ');
+    </script>
+    
+    <!-- Google AdSense -->
+    <meta name="google-adsense-account" content="ca-pub-3226248910880387">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3226248910880387" crossorigin="anonymous"></script>
+    
+    <!-- 構造化データ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PDFCutter",
+      "description": "無料PDF分割・結合ツール",
+      "url": "https://pdfcutter.jp",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      },
+      "featureList": [
+        "PDF分割",
+        "PDF結合",
+        "ページ指定分割",
+        "複数ファイル結合"
+      ]
+    }
+    </script>
 </head>
 <body>
-    <header>
-        <h1>PDF分割・結合ツール</h1>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-file-pdf"></i>
+                    PDFCUTTER
+                </a>
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}" class="nav-link">PDF結合</a>
+                <!-- 分割リンクを一時的にコメントアウトまたは修正 -->
+                <!-- <a href="{{ url_for('split_pdf') }}" class="nav-link">分割</a> -->
+                <a href="/split" class="nav-link">PDF分割</a>
+                <a href="/delete" class="nav-link">PDFページ削除</a>
+                <a href="/reorder" class="nav-link">PDFページ並び替え</a>
+                <a href="/extract" class="nav-link">PDFページ抽出</a>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
+    <main class="main">
+        {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2024 PDF分割・結合ツール. All rights reserved.</p>
-        <a href="/privacy">プライバシーポリシー</a>
-    </footer>
-
-    <!-- 控えめなCookie同意バナー -->
-    <div id="cookie-banner" class="cookie-banner" style="display: none;">
-        <div class="cookie-content">
-            <p>Cookieを使用してサービスを向上させています。</p>
-            <div class="cookie-buttons">
-                <button id="accept-cookies" class="btn-accept">OK</button>
-                <button id="decline-cookies" class="btn-decline">拒否</button>
-                <a href="/privacy" class="privacy-link">詳細</a>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2025 PDFCUTTER. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="{{ url_for('terms') }}">利用規約</a>
+                    <a href="{{ url_for('privacy') }}">プライバシーポリシー</a>
+                </div>
             </div>
         </div>
+    </footer>
+
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <p>処理中...</p>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const banner = document.getElementById('cookie-banner');
-            const acceptBtn = document.getElementById('accept-cookies');
-            const declineBtn = document.getElementById('decline-cookies');
-            
-            // 初回のみ表示
-            if (!localStorage.getItem('cookies_decided')) {
-                setTimeout(() => banner.style.display = 'block', 1000);
-            }
-            
-            acceptBtn.addEventListener('click', function() {
-                localStorage.setItem('cookies_accepted', 'true');
-                localStorage.setItem('cookies_decided', 'true');
-                banner.style.display = 'none';
-            });
-            
-            declineBtn.addEventListener('click', function() {
-                localStorage.setItem('cookies_accepted', 'false');
-                localStorage.setItem('cookies_decided', 'true');
-                banner.style.display = 'none';
-            });
-        });
-    </script>
 </body>
 </html>
