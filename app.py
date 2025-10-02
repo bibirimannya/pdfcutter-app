@@ -579,48 +579,55 @@ def get_pdf_info():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    """ファイルダウンロード"""
+    """ファイルダウンロード（ダウンロード後に自動削除）"""
     try:
-        # セキュリティチェック: ファイル名にパストラバーサル攻撃がないか確認
         if not filename or '..' in filename or '/' in filename or '\\' in filename:
             app.logger.error(f"不正なファイル名: {filename}")
             return jsonify({'error': '不正なファイル名です'}), 400
         
         file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], filename)
-        app.logger.info(f"=== ダウンロード要求 ===")
-        app.logger.info(f"要求ファイル名: {filename}")
-        app.logger.info(f"完全パス: {file_path}")
-        app.logger.info(f"DOWNLOAD_FOLDER: {app.config['DOWNLOAD_FOLDER']}")
         
-        # ダウンロードフォルダ内のファイル一覧をログ出力（デバッグ用）
-        if os.path.exists(app.config['DOWNLOAD_FOLDER']):
-            files_in_folder = os.listdir(app.config['DOWNLOAD_FOLDER'])
-            app.logger.info(f"ダウンロードフォルダ内のファイル数: {len(files_in_folder)}")
-            app.logger.info(f"ダウンロードフォルダ内のファイル: {files_in_folder}")
-        
-        if os.path.exists(file_path):
-            file_size = os.path.getsize(file_path)
-            app.logger.info(f"ファイル存在確認: OK")
-            app.logger.info(f"ファイルサイズ: {file_size} bytes")
-            
-            # MIMEタイプを設定
-            mimetype = 'application/pdf'
-            
-            # ダウンロード用の表示名（元のファイル名から作成）
-            display_name = filename.split('_', 1)[1] if '_' in filename else filename
-            
-            app.logger.info(f"ダウンロード開始: {display_name}")
-            
-            return send_from_directory(
-                app.config['DOWNLOAD_FOLDER'], 
-                filename, 
-                as_attachment=True,
-                mimetype=mimetype,
-                download_name=display_name
-            )
-        else:
+        if not os.path.exists(file_path):
             app.logger.error(f"ファイルが見つかりません: {file_path}")
-            return jsonify({'error': 'ファイルが見つかりません', 'filename': filename}), 404
+            return jsonify({'error': 'ファイルが見つかりません'}), 404
+        
+        mimetype = 'application/pdf' if filename.endswith('.pdf') else 'application/zip'
+        display_name = filename.split('_', 1)[1] if '_' in filename else filename
+        
+        app.logger.info(f"ダウンロード開始: {display_name}")
+        
+        # ファイルを送信後に削除
+        response = send_from_directory(
+            app.config['DOWNLOAD_FOLDER'], 
+            filename, 
+            as_attachment=True,
+            mimetype=mimetype,
+            download_name=display_name
+        )
+        
+        # レスポンス送信後にファイルを削除するコールバックを登録
+        @response.call_on_close
+        def cleanup():
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    app.logger.info(f"ファイル削除完了: {filename}")
+                    
+                    # ZIPファイルの場合、含まれていた個別PDFファイルも削除
+                    if filename.endswith('.zip'):
+                        unique_id = filename.split('_')[0]
+                        for f in os.listdir(app.config['DOWNLOAD_FOLDER']):
+                            if f.startswith(unique_id) and f.endswith('.pdf'):
+                                pdf_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f)
+                                try:
+                                    os.remove(pdf_path)
+                                    app.logger.info(f"関連ファイル削除: {f}")
+                                except:
+                                    pass
+            except Exception as e:
+                app.logger.error(f"ファイル削除エラー: {str(e)}")
+        
+        return response
             
     except Exception as e:
         app.logger.error(f"ダウンロードエラー: {str(e)}")
@@ -653,7 +660,7 @@ def reorder_pdf():
         if not page_order:
             return jsonify({'success': False, 'error': 'ページ順序が指定されていません'}), 400
         
-        # 一意のファイル名を生成
+# 一意のファイル名を生成
         unique_id = str(uuid.uuid4())
         input_filename = f"input_{unique_id}.pdf"
         output_filename = f"reordered_{unique_id}.pdf"
